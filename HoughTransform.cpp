@@ -85,7 +85,8 @@ void HoughTransform::findLocalMaximums(int threshold) {
 				&& ((sortBuffer[i].first >= 0 && sortBuffer[i].first <= 90 || sortBuffer[i].first >= 180 && sortBuffer[i].first <= 270)
 					&& (sortBuffer[j].first >= 0 && sortBuffer[j].first <= 90 || sortBuffer[j].first >= 180 && sortBuffer[j].first <= 270)
 					|| (sortBuffer[i].first >= 90 && sortBuffer[i].first <= 180 || sortBuffer[i].first >= 270 && sortBuffer[i].first <= 360)
-					&& (sortBuffer[j].first >= 90 && sortBuffer[j].first <= 180 || sortBuffer[j].first >= 270 && sortBuffer[j].first <= 360))) {
+					&& (sortBuffer[j].first >= 90 && sortBuffer[j].first <= 180 || sortBuffer[j].first >= 270 && sortBuffer[j].first <= 360))
+				&& abs(sortBuffer[i].second - sortBuffer[j].second) < deltaRho) {
 				/*if (sortBuffer[i].first == 0 || sortBuffer[i].first == 180 || sortBuffer[j].first == 0 || sortBuffer[j].first == 180) { // 其中有一条垂直线
 					double dis = sortBuffer[i].second / cosTheta[sortBuffer[i].first] - sortBuffer[j].second / cosTheta[sortBuffer[j].first];
 					cout << "************8dis *****************  " << dis << endl;
@@ -107,23 +108,18 @@ void HoughTransform::findLocalMaximums(int threshold) {
 					j++;
 					continue;
 				}*/
-				if (abs(sortBuffer[i].second - sortBuffer[j].second) <= deltaRho) {
+				//if (abs(sortBuffer[i].second - sortBuffer[j].second) <= deltaRho) {
 					if (accumulation(sortBuffer[i].first, sortBuffer[i].second) <
-						accumulation(sortBuffer[j].first, sortBuffer[j].second)) {
+						accumulation(sortBuffer[j].first, sortBuffer[j].second) ) {
 						sortBuffer.erase(sortBuffer.begin() + i);
 						eraseI = true;
 					}
 					else if (accumulation(sortBuffer[j].first, sortBuffer[j].second) <=
-						accumulation(sortBuffer[i].first, sortBuffer[i].second)) {
+						accumulation(sortBuffer[i].first, sortBuffer[i].second) ) {
 						sortBuffer.erase(sortBuffer.begin() + j);
 						continue;
 					}
-				}
-					
-				
-
-				
-				
+				//}
 			}
 			/*else if ((sortBuffer[i].first == 0 || sortBuffer[i].first == 180) && (sortBuffer[j].first == 0 || sortBuffer[j].first == 180)
 				|| (sortBuffer[i].first == 90 || sortBuffer[i].first == 270) && (sortBuffer[j].first == 90 || sortBuffer[i].first == 270)) {
@@ -164,6 +160,9 @@ void HoughTransform::findLocalMaximums(int threshold) {
 		if (!eraseI) {
 			i++;
 		}
+		else {
+			i--;
+		}
 	}
 
 	
@@ -199,6 +198,9 @@ void HoughTransform::generateLines() {
 		}
 		if (!eraseI) {
 			i++;
+		}
+		else {
+			i--;
 		}
 	}
 	cout << "count1" << count1 << endl;
@@ -280,7 +282,7 @@ void HoughTransform::generateLines() {
 					&& (sortBuffer[j].first >= 0 && sortBuffer[j].first <= 90 || sortBuffer[j].first >= 180 && sortBuffer[j].first <= 270)
 					|| (sortBuffer[i].first >= 90 && sortBuffer[i].first <= 180 || sortBuffer[i].first >= 270 && sortBuffer[i].first <= 360)
 					&& (sortBuffer[j].first >= 90 && sortBuffer[j].first <= 180 || sortBuffer[j].first >= 270 && sortBuffer[j].first <= 360))
-				&& abs(sortBuffer[i].second - sortBuffer[j].second) < deltaRho/2) {
+				&& abs(sortBuffer[i].second - sortBuffer[j].second) < deltaRho) {
 				if (accumulation(sortBuffer[i].first, sortBuffer[i].second) <
 					accumulation(sortBuffer[j].first, sortBuffer[j].second)) {
 					sortBuffer.erase(sortBuffer.begin() + i);
