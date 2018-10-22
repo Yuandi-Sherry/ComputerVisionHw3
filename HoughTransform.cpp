@@ -16,7 +16,7 @@ HoughTransform::HoughTransform(CImg<unsigned char> inputImg, CImg<unsigned char>
 	height = img.height();
 	double temp = width * width + height * height;
 	dia = ceil(sqrt(temp));
-	deltaTheta = 45;
+	deltaTheta = 70;
 	deltaRho = dia / 30;
 	threshold = thres;
 
@@ -82,11 +82,38 @@ void HoughTransform::findLocalMaximums(int threshold) {
 			if ((abs(sortBuffer[i].first - sortBuffer[j].first) < deltaTheta
 				|| abs(abs(sortBuffer[i].first - sortBuffer[j].first) - 360) < deltaTheta
 				|| abs(abs(sortBuffer[i].first - sortBuffer[j].first) - 180) < deltaTheta)
-				&& ((sortBuffer[i].first >= 0 && sortBuffer[i].first <= 90 || sortBuffer[i].first >= 180 && sortBuffer[i].first <= 270)
+				&& abs(sortBuffer[i].second - sortBuffer[j].second) < deltaRho) {
+				if ((sortBuffer[i].first >= 0 && sortBuffer[i].first <= 90 || sortBuffer[i].first >= 180 && sortBuffer[i].first <= 270)
 					&& (sortBuffer[j].first >= 0 && sortBuffer[j].first <= 90 || sortBuffer[j].first >= 180 && sortBuffer[j].first <= 270)
 					|| (sortBuffer[i].first >= 90 && sortBuffer[i].first <= 180 || sortBuffer[i].first >= 270 && sortBuffer[i].first <= 360)
-					&& (sortBuffer[j].first >= 90 && sortBuffer[j].first <= 180 || sortBuffer[j].first >= 270 && sortBuffer[j].first <= 360))
-				&& abs(sortBuffer[i].second - sortBuffer[j].second) < deltaRho) {
+					&& (sortBuffer[j].first >= 90 && sortBuffer[j].first <= 180 || sortBuffer[j].first >= 270 && sortBuffer[j].first <= 360)) {
+					if (accumulation(sortBuffer[i].first, sortBuffer[i].second) <
+						accumulation(sortBuffer[j].first, sortBuffer[j].second)) {
+						sortBuffer.erase(sortBuffer.begin() + i);
+						eraseI = true;
+					}
+					else if (accumulation(sortBuffer[j].first, sortBuffer[j].second) <=
+						accumulation(sortBuffer[i].first, sortBuffer[i].second)) {
+						sortBuffer.erase(sortBuffer.begin() + j);
+						continue;
+					}
+				}
+				else {
+					double dis1 = sortBuffer[i].second / sinTheta[sortBuffer[i].first] - sortBuffer[j].second / sinTheta[sortBuffer[j].first];
+					double dis2 = sortBuffer[i].second / cosTheta[sortBuffer[i].first] - sortBuffer[j].second / cosTheta[sortBuffer[j].first];
+					if (abs(dis1) < deltaRho || abs(dis2) < deltaRho) {
+						if (accumulation(sortBuffer[i].first, sortBuffer[i].second) <
+							accumulation(sortBuffer[j].first, sortBuffer[j].second)) {
+							sortBuffer.erase(sortBuffer.begin() + i);
+							eraseI = true;
+						}
+						else if (accumulation(sortBuffer[j].first, sortBuffer[j].second) <=
+							accumulation(sortBuffer[i].first, sortBuffer[i].second)) {
+							sortBuffer.erase(sortBuffer.begin() + j);
+							continue;
+						}
+					}
+				}
 				/*if (sortBuffer[i].first == 0 || sortBuffer[i].first == 180 || sortBuffer[j].first == 0 || sortBuffer[j].first == 180) { // 其中有一条垂直线
 					double dis = sortBuffer[i].second / cosTheta[sortBuffer[i].first] - sortBuffer[j].second / cosTheta[sortBuffer[j].first];
 					cout << "************8dis *****************  " << dis << endl;
@@ -109,16 +136,7 @@ void HoughTransform::findLocalMaximums(int threshold) {
 					continue;
 				}*/
 				//if (abs(sortBuffer[i].second - sortBuffer[j].second) <= deltaRho) {
-					if (accumulation(sortBuffer[i].first, sortBuffer[i].second) <
-						accumulation(sortBuffer[j].first, sortBuffer[j].second) ) {
-						sortBuffer.erase(sortBuffer.begin() + i);
-						eraseI = true;
-					}
-					else if (accumulation(sortBuffer[j].first, sortBuffer[j].second) <=
-						accumulation(sortBuffer[i].first, sortBuffer[i].second) ) {
-						sortBuffer.erase(sortBuffer.begin() + j);
-						continue;
-					}
+					
 				//}
 			}
 			/*else if ((sortBuffer[i].first == 0 || sortBuffer[i].first == 180) && (sortBuffer[j].first == 0 || sortBuffer[j].first == 180)
