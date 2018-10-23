@@ -24,7 +24,7 @@ HoughTransform::HoughTransform(CImg<unsigned char> inputImg, CImg<unsigned char>
 	maxLength = dia / 10;
 	accumulation = CImg<unsigned char>(360, dia);
 
-	string t = to_string(id) + "edge_origin.bmp";
+	string t = to_string(id) + "edge__origin.bmp";
 	const char * tempName = t.c_str();
 	img.save(tempName);
 	initTriangle();
@@ -37,7 +37,7 @@ HoughTransform::HoughTransform(CImg<unsigned char> inputImg, CImg<unsigned char>
 
 
 void HoughTransform::initTriangle() {
-	cout << "initTriangle" << endl;
+
 	sinTheta = new double[360];
 	cosTheta = new double[360];
 	for (int i = 0; i < 360; i++) {
@@ -53,7 +53,6 @@ void HoughTransform::initTriangle() {
 }
 
 void HoughTransform::fillAccumulation() {
-	cout << "fillAccumulation" << endl;
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < height; j++) {
 			//cout << img(i, j) << endl;
@@ -66,7 +65,6 @@ void HoughTransform::fillAccumulation() {
 			}
 		}
 	}
-	//accumulation.display();
 }
 
 void HoughTransform::findLocalMaximums(int threshold) {
@@ -132,14 +130,18 @@ void HoughTransform::filter() {
 	for (int i = 0; i < buffer.size(); ) {
 		boolean eraseI = false;
 		for (int j = i + 1; j < buffer.size(); ) {
-			if ((abs(buffer[i].first - buffer[j].first) < deltaTheta
-				|| abs(abs(buffer[i].first - buffer[j].first) - 360) < deltaTheta
-				|| abs(abs(buffer[i].first - buffer[j].first) - 180) < deltaTheta)
-				&& abs(buffer[i].second - buffer[j].second) < deltaRho
+			// 在同一单调区间比较
+			if (((buffer[i].first > 0 && buffer[i].first < 180 && buffer[j].first > 0 && buffer[j].first < 180 && abs(buffer[i].first - buffer[j].first) < deltaTheta)
+				|| (buffer[i].first > 180 && buffer[i].first < 360 && buffer[j].first > 180 && buffer[j].first < 360 && abs(buffer[i].first - buffer[j].first) < deltaTheta)
+				|| (buffer[i].first > 180 && buffer[i].first < 360 && buffer[j].first > 0 && buffer[j].first < 180 && abs(buffer[i].first - buffer[j].first - 180) < deltaTheta)
+				|| (buffer[i].first > 0 && buffer[i].first < 180 && buffer[j].first > 0 && buffer[j].first < 180 && abs(buffer[j].first - buffer[i].first - 180) < deltaTheta)
+
+				)
+				&& abs(buffer[i].second - buffer[j].second) < deltaRho/*
 				&&( (buffer[i].first > 0 && buffer[i].first < 90 || buffer[i].first > 180 && buffer[i].first < 270)
 				&& (buffer[j].first > 0 && buffer[j].first < 90 || buffer[j].first > 180 && buffer[j].first < 270)
 				|| (buffer[i].first > 90 && buffer[i].first < 180 || buffer[i].first > 270 && buffer[i].first < 360)
-				&& (buffer[j].first > 90 && buffer[j].first < 180 || buffer[j].first > 270 && buffer[j].first < 360))) {
+				&& (buffer[j].first > 90 && buffer[j].first < 180 || buffer[j].first > 270 && buffer[j].first < 360)*/) {
 					count++;
 					if (accumulation(buffer[i].first, buffer[i].second) <
 						accumulation(buffer[j].first, buffer[j].second)) {
