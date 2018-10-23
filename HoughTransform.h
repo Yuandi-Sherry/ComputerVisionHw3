@@ -15,6 +15,8 @@ private:
 	int width;
 	int height;
 	int dia; // 原图片对角线长度
+	int dis;
+	int maxLength;
 	double deltaTheta;
 	double deltaRho;
 	double* sinTheta;
@@ -32,6 +34,7 @@ public:
 	void fillAccumulation();
 	void generateLines();
 	void drawPoints();
+	void filter();
 };
 
 #endif // !HOUGH_TRANSFORM

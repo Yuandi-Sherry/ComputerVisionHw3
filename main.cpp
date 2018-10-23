@@ -15,7 +15,7 @@ int main()
 		input = edge_origin.c_str();
 		CImg<unsigned char> edgeImg(input); 
 		//canny answer = canny(originalImg, 0.9, 400);
-		HoughTransform houghTransform = HoughTransform(edgeImg, originalImg, i, 225);
+		HoughTransform houghTransform = HoughTransform(edgeImg, originalImg, i, 200);
 	}
 	/*for (int i = 1; i <= 6; i++) {
 		string name = to_string(i) + ".bmp";

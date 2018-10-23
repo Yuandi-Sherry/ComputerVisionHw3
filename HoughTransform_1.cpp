@@ -16,8 +16,8 @@ HoughTransform::HoughTransform(CImg<unsigned char> inputImg, CImg<unsigned char>
 	height = img.height();
 	double temp = width * width + height * height;
 	dia = ceil(sqrt(temp));
-	deltaTheta = 70;
-	deltaRho = dia / 30;
+	deltaTheta = 45;
+	deltaRho = dia / 25;
 	threshold = thres;
 
 	accumulation = CImg<unsigned char>(360, dia);
@@ -75,45 +75,78 @@ void HoughTransform::findLocalMaximums(int threshold) {
 			}
 		}
 	}
-
+	// 删除不经过图片的点
+	int count1 = 0;
+	for (int i = 0; i < sortBuffer.size(); ) {
+		boolean eraseI = false;
+		double k = 0, b = 0;
+		if (sinTheta[sortBuffer[i].first] != 0) {
+			k = (-1) * (double)cosTheta[sortBuffer[i].first] / sinTheta[sortBuffer[i].first];
+			b = sortBuffer[i].second / sinTheta[sortBuffer[i].first];
+		}
+		else {
+			b = sortBuffer[i].second;
+		}
+		if (k * 0 + b > height && k*width + b > height || k * 0 + b < 0 && k*width + b < 0
+			|| abs(sinTheta[sortBuffer[i].first]) <= 0.000000001 && (b < 0 || b > height)) {// 不经过图片
+			sortBuffer.erase(sortBuffer.begin() + i);
+			eraseI = true;
+			count1++;
+		}
+		if (!eraseI) {
+			i++;
+		}
+		else {
+			i--;
+		}
+	}
+	cout << "count1" << count1 << endl;
+	int count2 = 0;
 	for (int i = 0; i < sortBuffer.size(); ) {
 		boolean eraseI = false;
 		for (int j = i + 1; j < sortBuffer.size(); ) {
 			if ((abs(sortBuffer[i].first - sortBuffer[j].first) < deltaTheta
 				|| abs(abs(sortBuffer[i].first - sortBuffer[j].first) - 360) < deltaTheta
 				|| abs(abs(sortBuffer[i].first - sortBuffer[j].first) - 180) < deltaTheta)
-				&& abs(sortBuffer[i].second - sortBuffer[j].second) < deltaRho) {
-				if ((sortBuffer[i].first >= 0 && sortBuffer[i].first <= 90 || sortBuffer[i].first >= 180 && sortBuffer[i].first <= 270)
-					&& (sortBuffer[j].first >= 0 && sortBuffer[j].first <= 90 || sortBuffer[j].first >= 180 && sortBuffer[j].first <= 270)
-					|| (sortBuffer[i].first >= 90 && sortBuffer[i].first <= 180 || sortBuffer[i].first >= 270 && sortBuffer[i].first <= 360)
-					&& (sortBuffer[j].first >= 90 && sortBuffer[j].first <= 180 || sortBuffer[j].first >= 270 && sortBuffer[j].first <= 360)) {
+				) {
+				if ((sortBuffer[i].first > 0 && sortBuffer[i].first < 90 || sortBuffer[i].first > 180 && sortBuffer[i].first < 270)
+					&& (sortBuffer[j].first > 0 && sortBuffer[j].first < 90 || sortBuffer[j].first > 180 && sortBuffer[j].first < 270)
+					|| (sortBuffer[i].first > 90 && sortBuffer[i].first < 180 || sortBuffer[i].first > 270 && sortBuffer[i].first < 360)
+					&& (sortBuffer[j].first > 90 && sortBuffer[j].first < 180 || sortBuffer[j].first > 270 && sortBuffer[j].first < 360) 
+					&& abs(sortBuffer[i].second - sortBuffer[j].second) < deltaRho) {
+					count1++;
 					if (accumulation(sortBuffer[i].first, sortBuffer[i].second) <
-						accumulation(sortBuffer[j].first, sortBuffer[j].second)) {
+						accumulation(sortBuffer[j].first, sortBuffer[j].second) ) {
 						sortBuffer.erase(sortBuffer.begin() + i);
 						eraseI = true;
 					}
 					else if (accumulation(sortBuffer[j].first, sortBuffer[j].second) <=
-						accumulation(sortBuffer[i].first, sortBuffer[i].second)) {
+						accumulation(sortBuffer[i].first, sortBuffer[i].second) ) {
 						sortBuffer.erase(sortBuffer.begin() + j);
 						continue;
 					}
 				}
-				else {
-					double dis1 = sortBuffer[i].second / sinTheta[sortBuffer[i].first] - sortBuffer[j].second / sinTheta[sortBuffer[j].first];
-					double dis2 = sortBuffer[i].second / cosTheta[sortBuffer[i].first] - sortBuffer[j].second / cosTheta[sortBuffer[j].first];
-					if (abs(dis1) < deltaRho || abs(dis2) < deltaRho) {
+				/*else {
+					double dis = 0;
+					if (sortBuffer[i].first  == 0 || sortBuffer[i].first == 180 || sortBuffer[j].first == 0 || sortBuffer[j].first == 180) {
+						dis = sortBuffer[i].second / cosTheta[sortBuffer[i].first] - sortBuffer[j].second / cosTheta[sortBuffer[j].first];
+					}
+					else if (cosTheta[sortBuffer[i].first] == 0 || cosTheta[sortBuffer[j].first] == 0) {
+						dis = sortBuffer[i].second / sinTheta[sortBuffer[i].first] - sortBuffer[j].second / sinTheta[sortBuffer[j].first];
+					}
+					if (abs(dis) < (double)deltaRho ) {
+						count2++;
 						if (accumulation(sortBuffer[i].first, sortBuffer[i].second) <
 							accumulation(sortBuffer[j].first, sortBuffer[j].second)) {
 							sortBuffer.erase(sortBuffer.begin() + i);
 							eraseI = true;
 						}
-						else if (accumulation(sortBuffer[j].first, sortBuffer[j].second) <=
-							accumulation(sortBuffer[i].first, sortBuffer[i].second)) {
+						else {
 							sortBuffer.erase(sortBuffer.begin() + j);
 							continue;
 						}
 					}
-				}
+				}*/
 				/*if (sortBuffer[i].first == 0 || sortBuffer[i].first == 180 || sortBuffer[j].first == 0 || sortBuffer[j].first == 180) { // 其中有一条垂直线
 					double dis = sortBuffer[i].second / cosTheta[sortBuffer[i].first] - sortBuffer[j].second / cosTheta[sortBuffer[j].first];
 					cout << "************8dis *****************  " << dis << endl;
@@ -182,8 +215,9 @@ void HoughTransform::findLocalMaximums(int threshold) {
 			i--;
 		}
 	}
+	cout << "***********findLocalMaximums (((((((((( count1" << count1 << endl;
 
-	
+	cout << "***********findLocalMaximums (((((((((( count2" << count2<< endl;
 }
 
 void HoughTransform::generateLines() {
@@ -197,31 +231,7 @@ void HoughTransform::generateLines() {
 		}
 		cout << " k " << k << " b " << b;
 	}*/
-	int count1 = 0;
-	for (int i = 0; i < sortBuffer.size(); ) {
-		boolean eraseI = false;
-		double k = 0, b = 0;
-		if (sinTheta[sortBuffer[i].first] != 0) {
-			k = (-1) * (double)cosTheta[sortBuffer[i].first] / sinTheta[sortBuffer[i].first];
-			b= sortBuffer[i].second / sinTheta[sortBuffer[i].first];
-		}
-		else {
-			b = (double)cosTheta[sortBuffer[i].first] * sortBuffer[i].second;
-		}
-		if (k * 0 + b > height && k*width + b > height || k * 0 + b < 0 && k*width + b < 0 
-			|| sinTheta[sortBuffer[i].first] == 0 && (b < 0 || b > height) ) {// 不经过图片
-			sortBuffer.erase(sortBuffer.begin() + i);
-			eraseI = true;
-			count1++;
-		}
-		if (!eraseI) {
-			i++;
-		}
-		else {
-			i--;
-		}
-	}
-	cout << "count1" << count1 << endl;
+	
 	int count2 = 0;
 	/*for (int i = 0; i < linesParams.size(); ) {
 		boolean eraseI = false;
@@ -296,11 +306,12 @@ void HoughTransform::generateLines() {
 			if ((abs(sortBuffer[i].first - sortBuffer[j].first) < deltaTheta/2
 				|| abs(abs(sortBuffer[i].first - sortBuffer[j].first) - 360) < deltaTheta/2
 				|| abs(abs(sortBuffer[i].first - sortBuffer[j].first) - 180) < deltaTheta/2)
-				&& ((sortBuffer[i].first >= 0 && sortBuffer[i].first <= 90 || sortBuffer[i].first >= 180 && sortBuffer[i].first <= 270)
+				/*&& ((sortBuffer[i].first >= 0 && sortBuffer[i].first <= 90 || sortBuffer[i].first >= 180 && sortBuffer[i].first <= 270)
 					&& (sortBuffer[j].first >= 0 && sortBuffer[j].first <= 90 || sortBuffer[j].first >= 180 && sortBuffer[j].first <= 270)
 					|| (sortBuffer[i].first >= 90 && sortBuffer[i].first <= 180 || sortBuffer[i].first >= 270 && sortBuffer[i].first <= 360)
 					&& (sortBuffer[j].first >= 90 && sortBuffer[j].first <= 180 || sortBuffer[j].first >= 270 && sortBuffer[j].first <= 360))
-				&& abs(sortBuffer[i].second - sortBuffer[j].second) < deltaRho) {
+				&& abs(sortBuffer[i].second - sortBuffer[j].second) < deltaRho*/) {
+				count3++;
 				if (accumulation(sortBuffer[i].first, sortBuffer[i].second) <
 					accumulation(sortBuffer[j].first, sortBuffer[j].second)) {
 					sortBuffer.erase(sortBuffer.begin() + i);
@@ -310,6 +321,40 @@ void HoughTransform::generateLines() {
 					sortBuffer.erase(sortBuffer.begin() + j);
 					continue;
 				}
+				/*bool erase = false;
+				double dis = 0;
+				if (sortBuffer[i].first == 0 || sortBuffer[i].first == 180 || sortBuffer[j].first == 0 || sortBuffer[j].first == 180) {
+					dis = sortBuffer[i].second / cosTheta[sortBuffer[i].first] - sortBuffer[j].second / cosTheta[sortBuffer[j].first];
+					cout << "1111111111111111111  " << dis << "        " << deltaRho  << endl;
+				}
+				else if (sortBuffer[i].first == 90 || sortBuffer[i].first == 270 || sortBuffer[j].first == 90 || sortBuffer[j].first == 270) {
+					dis = sortBuffer[i].second / sinTheta[sortBuffer[i].first] - sortBuffer[j].second / sinTheta[sortBuffer[j].first];
+					cout << "22222222222222222222  " << dis << "        " << deltaRho << endl;					
+				}
+				else {
+					double k1 = (-1) * (double)cosTheta[sortBuffer[i].first] / sinTheta[sortBuffer[i].first];
+					double b1 = sortBuffer[i].second / sinTheta[sortBuffer[i].first];
+					double k2 = (-1) * (double)cosTheta[sortBuffer[j].first] / sinTheta[sortBuffer[j].first];
+					double b2 = sortBuffer[j].second / sinTheta[sortBuffer[j].first];
+					double x = -(b1 - b2) / (k1 - k2);
+					double y = k1 * x + b1;
+					if (x > 0 && x < width && y > 0 || y < height) {
+						erase = true;
+					}
+				}
+				
+				if (abs(dis) < (double)deltaRho || erase) {
+					count2++;
+					if (accumulation(sortBuffer[i].first, sortBuffer[i].second) <
+						accumulation(sortBuffer[j].first, sortBuffer[j].second)) {
+						sortBuffer.erase(sortBuffer.begin() + i);
+						eraseI = true;
+					}
+					else {
+						sortBuffer.erase(sortBuffer.begin() + j);
+						continue;
+					}
+				}*/
 			}
 			j++;
 		}
@@ -329,6 +374,9 @@ void HoughTransform::generateLines() {
 			k = (-1) * (double)cosTheta[sortBuffer[i].first] / sinTheta[sortBuffer[i].first];
 			b = sortBuffer[i].second / sinTheta[sortBuffer[i].first];
 			linesParams.push_back(make_pair(k, b));
+		}
+		else {
+			b = sortBuffer[i].second;
 		}
 		cout << " k " << k << " b " << b << endl;
 	}
@@ -357,14 +405,8 @@ void HoughTransform::generateLines() {
 			y0 = b;
 			y1 = b;
 		}
-		if (k - 0.05 < 0.01) {
-			result.draw_line(x0 + 3, y0 + 3, x1 + 3, y1 + 3, red);
-		}
-		else{
-			cout << k << "   ____________    " << b << endl;
-			result.draw_line(x0 + 3, y0 + 3, x1 + 3, y1 + 3, blue);
 		
-		}
+		result.draw_line(x0 + 3, y0 + 3, x1 + 3, y1 + 3, blue);
 		
 	}
 
@@ -386,12 +428,11 @@ void HoughTransform::drawPoints() {
 				}
 			}
 		}
-		
 	}
 	const double pointColor[] = { 255, 0, 0 };
 	cout << "draw points" << " " << points.size()<< endl;
 	for (int i = 0; i < points.size(); i++) {
-		result.draw_circle(points[i].first, points[i].second, 2, pointColor);
+		result.draw_circle(points[i].first, points[i].second, 7, pointColor);
 	}
 	//result.display(); 
 	string t = to_string(id) + "paperPoint_origin.bmp";
