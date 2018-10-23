@@ -21,7 +21,7 @@ private:
 	double deltaRho;
 	double* sinTheta;
 	double* cosTheta;
-	vector<pair<int, int>> sortBuffer;
+	vector<pair<int, int>> buffer;
 	vector<pair<double, double>> linesParams;
 	vector<pair<int, int>> points;
 	int threshold;

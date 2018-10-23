@@ -74,17 +74,17 @@ void HoughTransform::findLocalMaximums(int threshold) {
 		for (int theta = 0; theta < 360; theta++) {
 			bool push = true;
 			if (accumulation(theta, r) > threshold) {
-				for (int i = 0; i < sortBuffer.size(); i++) {
-					if (sqrt(pow(sortBuffer[i].first - theta, 2) + pow(sortBuffer[i].second - r, 2)) < dis) {
+				for (int i = 0; i < buffer.size(); i++) {
+					if (sqrt(pow(buffer[i].first - theta, 2) + pow(buffer[i].second - r, 2)) < dis) {
 						push = false;
-						if (accumulation(sortBuffer[i].first, sortBuffer[i].second) <
+						if (accumulation(buffer[i].first, buffer[i].second) <
 							accumulation(theta, r)) {							
-							sortBuffer[i] = make_pair(theta, r);
+							buffer[i] = make_pair(theta, r);
 						} 
 					}
 				}
 				if (push) {
-					sortBuffer.push_back(make_pair(theta, r));
+					buffer.push_back(make_pair(theta, r));
 				}
 			}
 		}
@@ -93,16 +93,16 @@ void HoughTransform::findLocalMaximums(int threshold) {
 
 void HoughTransform::filter() {
 	int count = 0;
-	/*for (int i = 0; i < sortBuffer.size(); ) {
+	/*for (int i = 0; i < buffer.size(); ) {
 		double k = 0, b = 0;
 		int x1 = 0, x2 = 0, y1 = 0, y2 = 0;
-		if (sinTheta[sortBuffer[i].first] != 0) {
-			k = (-1) * (double)cosTheta[sortBuffer[i].first] / sinTheta[sortBuffer[i].first];
-			b = sortBuffer[i].second / sinTheta[sortBuffer[i].first];
+		if (sinTheta[buffer[i].first] != 0) {
+			k = (-1) * (double)cosTheta[buffer[i].first] / sinTheta[buffer[i].first];
+			b = buffer[i].second / sinTheta[buffer[i].first];
 			linesParams.push_back(make_pair(k, b));
 		}
 		else {
-			b = sortBuffer[i].second;
+			b = buffer[i].second;
 		}
 		bool first = true;
 		for (int j = 0; j < width; j++) {
@@ -122,33 +122,33 @@ void HoughTransform::filter() {
 		int dist = sqrt(pow(x1 - x2, 2) + pow(y1 - y1, 2));
 		if (dist < maxLength) {
 			count++;
-			sortBuffer.erase(sortBuffer.begin() + i);
+			buffer.erase(buffer.begin() + i);
 		}
 		else {
 			i++;
 		}
 	}*/
 
-	for (int i = 0; i < sortBuffer.size(); ) {
+	for (int i = 0; i < buffer.size(); ) {
 		boolean eraseI = false;
-		for (int j = i + 1; j < sortBuffer.size(); ) {
-			if ((abs(sortBuffer[i].first - sortBuffer[j].first) < deltaTheta
-				|| abs(abs(sortBuffer[i].first - sortBuffer[j].first) - 360) < deltaTheta
-				|| abs(abs(sortBuffer[i].first - sortBuffer[j].first) - 180) < deltaTheta)
-				&& abs(sortBuffer[i].second - sortBuffer[j].second) < deltaRho
-				&&( (sortBuffer[i].first > 0 && sortBuffer[i].first < 90 || sortBuffer[i].first > 180 && sortBuffer[i].first < 270)
-				&& (sortBuffer[j].first > 0 && sortBuffer[j].first < 90 || sortBuffer[j].first > 180 && sortBuffer[j].first < 270)
-				|| (sortBuffer[i].first > 90 && sortBuffer[i].first < 180 || sortBuffer[i].first > 270 && sortBuffer[i].first < 360)
-				&& (sortBuffer[j].first > 90 && sortBuffer[j].first < 180 || sortBuffer[j].first > 270 && sortBuffer[j].first < 360))) {
+		for (int j = i + 1; j < buffer.size(); ) {
+			if ((abs(buffer[i].first - buffer[j].first) < deltaTheta
+				|| abs(abs(buffer[i].first - buffer[j].first) - 360) < deltaTheta
+				|| abs(abs(buffer[i].first - buffer[j].first) - 180) < deltaTheta)
+				&& abs(buffer[i].second - buffer[j].second) < deltaRho
+				&&( (buffer[i].first > 0 && buffer[i].first < 90 || buffer[i].first > 180 && buffer[i].first < 270)
+				&& (buffer[j].first > 0 && buffer[j].first < 90 || buffer[j].first > 180 && buffer[j].first < 270)
+				|| (buffer[i].first > 90 && buffer[i].first < 180 || buffer[i].first > 270 && buffer[i].first < 360)
+				&& (buffer[j].first > 90 && buffer[j].first < 180 || buffer[j].first > 270 && buffer[j].first < 360))) {
 					count++;
-					if (accumulation(sortBuffer[i].first, sortBuffer[i].second) <
-						accumulation(sortBuffer[j].first, sortBuffer[j].second)) {
-						sortBuffer.erase(sortBuffer.begin() + i);
+					if (accumulation(buffer[i].first, buffer[i].second) <
+						accumulation(buffer[j].first, buffer[j].second)) {
+						buffer.erase(buffer.begin() + i);
 						eraseI = true;
 					}
-					else if (accumulation(sortBuffer[j].first, sortBuffer[j].second) <=
-						accumulation(sortBuffer[i].first, sortBuffer[i].second)) {
-						sortBuffer.erase(sortBuffer.begin() + j);
+					else if (accumulation(buffer[j].first, buffer[j].second) <=
+						accumulation(buffer[i].first, buffer[i].second)) {
+						buffer.erase(buffer.begin() + j);
 						continue;
 					}
 				}
@@ -167,16 +167,16 @@ void HoughTransform::filter() {
 void HoughTransform::generateLines() {
 	
 	//draw
-	for (int i = 0; i < sortBuffer.size(); i++) {
-		cout << "theta  " << sortBuffer[i].first << "  rho  " << sortBuffer[i].second;
+	for (int i = 0; i < buffer.size(); i++) {
+		cout << "theta  " << buffer[i].first << "  rho  " << buffer[i].second;
 		double k = 0, b = 0;
-		if (sinTheta[sortBuffer[i].first] != 0) {
-			k = (-1) * (double)cosTheta[sortBuffer[i].first] / sinTheta[sortBuffer[i].first];
-			b = sortBuffer[i].second / sinTheta[sortBuffer[i].first];
+		if (sinTheta[buffer[i].first] != 0) {
+			k = (-1) * (double)cosTheta[buffer[i].first] / sinTheta[buffer[i].first];
+			b = buffer[i].second / sinTheta[buffer[i].first];
 			linesParams.push_back(make_pair(k, b));
 		}
 		else {
-			b = sortBuffer[i].second;
+			b = buffer[i].second;
 		}
 		cout << " k " << k << " b " << b << endl;
 	}
@@ -185,28 +185,17 @@ void HoughTransform::generateLines() {
 	const double blue[] = { 0, 0, 255 };
 	const double red[] = { 255, 0, 0 };
 	for (int i = 0; i < linesParams.size(); i++) {
-		int x0 = 0, y0, x1, y1;
-		double k = linesParams[i].first;
-		double b = linesParams[i].second;
-		if (k*x0 + b >= 0 && k*x0 + b < height) {
-			y0 = k * x0 + b;
-			x1 = width - 1;
-			y1 = k * x1 + b;
-		}
-		else if (k != 0) {
-			y0 = 0;
-			x0 = (y0 - b) / k;
-			y1 = height - 1;
-			x1 = (y1 - b) / k;
-		}
-		else {
-			x0 = 0;
-			x1 = width - 1;
-			y0 = b;
-			y1 = b;
-		}
+		const int x0 = (double)(0 - linesParams[i].second) / linesParams[i].first;
+        const int x1 = (double)(height - linesParams[i].second) / linesParams[i].first;
+        const int y0 = 0*linesParams[i].first + linesParams[i].second;
+        const int y1 = width*linesParams[i].first + linesParams[i].second;
 
-		result.draw_line(x0 + 3, y0 + 3, x1 + 3, y1 + 3, blue);
+        if (abs(linesParams[i].first) > 1) {
+            result.draw_line(x0, 0, x1, height, blue);
+        }
+        else {
+            result.draw_line(0, y0, width, y1, blue);
+        }
 
 	}
 
